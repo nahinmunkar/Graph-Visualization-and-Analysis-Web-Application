@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Tag, Typography, Spin } from 'antd';
+import { Card, Tag, Typography } from 'antd';
 
 const { Text } = Typography;
 
@@ -18,9 +18,9 @@ export const ModelPrediction = ({ classification, loading }) => {
   return (
     <Card title="ML Model Prediction" size="small" style={{ marginTop: 16 }}>
       {loading ? (
-        <Spin tip="Analyzing graph..." />
+        <Text>Analyzing graph...</Text>
       ) : classification?.classification ? (
-        <Tag color={getTypeColor(classification.classification.type)} style={{ fontSize: '14px', padding: '5px 10px' }}>
+        <Tag color={getTypeColor(classification.classification.type)} size="large">
           {classification.classification.type}
         </Tag>
       ) : (

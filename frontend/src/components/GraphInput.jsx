@@ -11,54 +11,55 @@ export const GraphInput = () => {
   const setEdges = useGraphStore(state => state.setEdges);
   const { classification, loading, classifyGraph } = useGraphClassification();
 
-  const parseEdges = () => {
+  const handleSubmit = () => {
     try {
       const lines = inputValue.trim().split('\n').filter(line => line.trim());
       const edges = lines.map(line => {
-        const parts = line.trim().split(/\s+/); // স্পেস বা ট্যাব দিয়ে ভাগ করা
+        const parts = line.trim().split(/\s+/);
         if (parts.length < 2) {
           throw new Error(`Invalid line: ${line}`);
         }
-        return [parts[0], parts[1], parts[2] || null]; // u, v, weight (optional)
+        return [parts[0], parts[1], parts[2] || null];
       });
-      return edges;
-    } catch (error) {
-      message.error(error.message || 'Invalid input format. Each line should be: u v [w]');
-      return null;
-    }
-  };
-
-  const handleSubmit = () => {
-    const edges = parseEdges();
-    if (edges) {
       setEdges(edges);
       message.success('Graph loaded successfully!');
+    } catch (error) {
+      message.error('Invalid input format. Each line should be: u v [w]');
     }
   };
 
   const handleClassify = async () => {
-    const edges = parseEdges();
-    if (edges) {
-      setEdges(edges); // গ্রাফ লোড করুন
-      await classifyGraph(edges); // এবং ক্লাসিফাই করুন
+    try {
+      const lines = inputValue.trim().split('\n').filter(line => line.trim());
+      const edges = lines.map(line => {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length < 2) {
+          throw new Error(`Invalid line: ${line}`);
+        }
+        return [parts[0], parts[1], parts[2] || null];
+      });
+      setEdges(edges);
+      await classifyGraph(edges);
       message.success('Graph loaded and classified!');
+    } catch (error) {
+      message.error('Invalid input format. Each line should be: u v [w]');
     }
   };
 
   return (
-    <Card title="Graph Input" style={{ marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+    <Card title="Graph Input" style={{ marginBottom: 16 }}>
       <TextArea
-        rows={6}
-        placeholder={`Enter edges (one per line):\nA B\nB C\nC D`}
+        rows={4}
+        placeholder='Enter edges '
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        style={{ marginBottom: 12, fontFamily: 'monospace' }}
+        style={{ marginBottom: 12 }}
       />
-      <Space wrap>
+      <Space>
         <Button type="primary" onClick={handleSubmit}>
           Load Graph
         </Button>
-        <Button onClick={handleClassify} loading={loading} type="primary" ghost>
+        <Button onClick={handleClassify} loading={loading}>
           Classify Graph
         </Button>
       </Space>

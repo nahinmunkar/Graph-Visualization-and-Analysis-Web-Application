@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import * as d3 from 'd3'; // d3 ইম্পোর্ট
 
 export const useGraphStore = create((set, get) => ({
   edges: [],
@@ -7,16 +6,16 @@ export const useGraphStore = create((set, get) => ({
   rootNode: null,
   algorithm: 'DFS',
   traversalState: {
-    visited: [], // Changed from Set to Array
-    visitOrder: [],
+    visited: new Set(),
+    visitOrder: [], // Track order of node visits
     current: null,
     currentEdge: null,
-    callStack: [], // For DFS
+    callStack: [], // For DFS recursion simulation
     queue: [], // For BFS
     isRunning: false,
     isComplete: false,
     isAutoPlaying: false,
-    phase: 'idle'
+    phase: 'idle' // 'visiting', 'exploring', 'backtracking'
   },
 
   setEdges: (edges) => {
@@ -26,20 +25,76 @@ export const useGraphStore = create((set, get) => ({
       nodeSet.add(to);
     });
     
-    const nodeArray = Array.from(nodeSet).map(id => ({ id, data: { label: id } }));
-
-    // d3 force simulation দিয়ে পজিশন সেট করা
-    const simulation = d3.forceSimulation(nodeArray)
-      .force("link", d3.forceLink(edges.map(e => ({ source: e[0], target: e[1] }))).id(d => d.id).distance(150))
-      .force("charge", d3.forceManyBody().strength(-200))
-      .force("center", d3.forceCenter(400, 250))
-      .stop() // সিমুলেশন না চালিয়ে শুধু পজিশন জেনারেট
-      .tick(300); // 300 ইটারেশন চালানো
-
-    const nodesWithPositions = nodeArray.map(node => ({
-        id: node.id,
-        position: { x: node.x, y: node.y },
-        data: { label: node.id }
+    // Force-directed layout
+    const nodeArray = Array.from(nodeSet);
+    const nodePositions = {};
+    const minDistance = 120;
+    const width = 500;
+    const height = 350;
+    
+    // Initialize random positions
+    nodeArray.forEach(id => {
+      nodePositions[id] = {
+        x: Math.random() * (width - 100) + 50,
+        y: Math.random() * (height - 100) + 50
+      };
+    });
+    
+    // Force-directed algorithm iterations
+    for (let iter = 0; iter < 100; iter++) {
+      const forces = {};
+      nodeArray.forEach(id => {
+        forces[id] = { x: 0, y: 0 };
+      });
+      
+      // Repulsive forces between all nodes
+      for (let i = 0; i < nodeArray.length; i++) {
+        for (let j = i + 1; j < nodeArray.length; j++) {
+          const node1 = nodeArray[i];
+          const node2 = nodeArray[j];
+          const dx = nodePositions[node2].x - nodePositions[node1].x;
+          const dy = nodePositions[node2].y - nodePositions[node1].y;
+          const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+          
+          if (distance < minDistance) {
+            const force = (minDistance - distance) / distance * 0.5;
+            forces[node1].x -= dx * force;
+            forces[node1].y -= dy * force;
+            forces[node2].x += dx * force;
+            forces[node2].y += dy * force;
+          }
+        }
+      }
+      
+      // Attractive forces for connected nodes
+      edges.forEach(([from, to]) => {
+        const dx = nodePositions[to].x - nodePositions[from].x;
+        const dy = nodePositions[to].y - nodePositions[from].y;
+        const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+        const idealDistance = 150;
+        const force = (distance - idealDistance) / distance * 0.1;
+        
+        forces[from].x += dx * force;
+        forces[from].y += dy * force;
+        forces[to].x -= dx * force;
+        forces[to].y -= dy * force;
+      });
+      
+      // Apply forces
+      nodeArray.forEach(id => {
+        nodePositions[id].x += forces[id].x;
+        nodePositions[id].y += forces[id].y;
+        
+        // Keep within bounds
+        nodePositions[id].x = Math.max(30, Math.min(width - 30, nodePositions[id].x));
+        nodePositions[id].y = Math.max(30, Math.min(height - 30, nodePositions[id].y));
+      });
+    }
+    
+    const nodes = nodeArray.map(id => ({
+      id,
+      position: nodePositions[id],
+      data: { label: id }
     }));
     
     set({ 
@@ -50,10 +105,10 @@ export const useGraphStore = create((set, get) => ({
         label: weight || '',
         labelStyle: { fontSize: 12, fontWeight: 'bold' }
       })),
-      nodes: nodesWithPositions,
+      nodes,
       rootNode: null,
       traversalState: {
-        visited: [], // Changed from Set to Array
+        visited: new Set(),
         visitOrder: [],
         current: null,
         currentEdge: null,
@@ -73,7 +128,7 @@ export const useGraphStore = create((set, get) => ({
 
   resetTraversal: () => set({
     traversalState: {
-      visited: [], // Changed from Set to Array
+      visited: new Set(),
       visitOrder: [],
       current: null,
       currentEdge: null,

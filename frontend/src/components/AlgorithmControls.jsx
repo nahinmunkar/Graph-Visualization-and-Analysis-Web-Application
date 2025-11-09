@@ -4,11 +4,13 @@ import { useGraphStore } from '../store/graphStore';
 import { useTraversal } from '../hooks/useTraversal';
 
 export const AlgorithmControls = () => {
-  const algorithm = useGraphStore(state => state.algorithm);
-  const setAlgorithm = useGraphStore(state => state.setAlgorithm);
-  const rootNode = useGraphStore(state => state.rootNode);
-  const traversalState = useGraphStore(state => state.traversalState);
-  const resetTraversal = useGraphStore(state => state.resetTraversal);
+  const { 
+    algorithm, 
+    setAlgorithm, 
+    rootNode, 
+    traversalState, 
+    resetTraversal 
+  } = useGraphStore();
   const { startTraversal, stepTraversal, startAutoPlay, stopAutoPlay } = useTraversal();
 
   const canStart = rootNode && !traversalState.isRunning;
@@ -16,7 +18,7 @@ export const AlgorithmControls = () => {
   const canAutoPlay = rootNode && !traversalState.isRunning;
 
   return (
-    <Card title="Algorithm Controls" style={{ marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+    <Card title="Algorithm Controls" style={{ marginBottom: 16 }}>
       <Space direction="vertical" style={{ width: '100%' }}>
         <Select
           style={{ width: '100%' }}
@@ -27,7 +29,7 @@ export const AlgorithmControls = () => {
             { value: 'BFS', label: 'Breadth-First Search (BFS)' }
           ]}
         />
-        <Space wrap>
+        <Space>
           <Button 
             type="primary" 
             onClick={startTraversal}
@@ -45,7 +47,6 @@ export const AlgorithmControls = () => {
             type="default"
             onClick={traversalState.isAutoPlaying ? stopAutoPlay : startAutoPlay}
             disabled={!canAutoPlay && !traversalState.isAutoPlaying}
-            danger={traversalState.isAutoPlaying}
           >
             {traversalState.isAutoPlaying ? 'Stop Auto' : 'Auto Play'}
           </Button>
