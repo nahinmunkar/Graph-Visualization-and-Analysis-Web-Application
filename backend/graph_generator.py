@@ -1,30 +1,26 @@
-import os
-import io
-import base64
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+import io
+import base64
 import json
+import os
 from simple_classifier import load_classifier, classify_graph
 
 app = Flask(__name__)
-CORS(app) # Enable Cross-Origin Resource Sharing
+CORS(app)
 
 # Load ML model on startup
-# NOTE: This path is a placeholder for now. 
-# Our SimpleGraphClassifier doesn't actually load a file, so this is fine.
-MODEL_PATH = 'graph_classifier_model.pth' 
+MODEL_PATH = 'graph_classifier_model.pth'
 if os.path.exists(MODEL_PATH):
     if load_classifier(MODEL_PATH):
         print(f"Graph classifier loaded successfully from {MODEL_PATH}")
     else:
         print(f"Failed to load model from {MODEL_PATH}")
 else:
-    # This is the path that will run
-    print(f"Model file not found at {MODEL_PATH}, using simple classifier.")
-    load_classifier(None) # Initialize the simple classifier anyway
+    print(f"Model file not found at {MODEL_PATH}")
 
 def create_modern_graph(edges, visited_nodes=None, current_node=None, current_edge=None):
     """Create a modern, beautiful graph visualization"""
@@ -63,10 +59,10 @@ def create_modern_graph(edges, visited_nodes=None, current_node=None, current_ed
             edge_widths.append(2)
     
     nx.draw_networkx_edges(G, pos, 
-                            edge_color=edge_colors,
-                            width=edge_widths,
-                            alpha=0.8,
-                            style='-')
+                          edge_color=edge_colors,
+                          width=edge_widths,
+                          alpha=0.8,
+                          style='-')
     
     # Draw nodes with modern colors and styling
     node_colors = []
@@ -85,18 +81,18 @@ def create_modern_graph(edges, visited_nodes=None, current_node=None, current_ed
     
     # Draw nodes
     nx.draw_networkx_nodes(G, pos,
-                           node_color=node_colors,
-                           node_size=node_sizes,
-                           edgecolors='#64748b',
-                           linewidths=3,
-                           alpha=0.95)
+                          node_color=node_colors,
+                          node_size=node_sizes,
+                          edgecolors='#64748b',
+                          linewidths=3,
+                          alpha=0.95)
     
     # Draw labels with modern typography
     nx.draw_networkx_labels(G, pos,
-                            font_size=16,
-                            font_weight='bold',
-                            font_family='Arial',
-                            font_color='#1e293b')
+                           font_size=16,
+                           font_weight='bold',
+                           font_family='Arial',
+                           font_color='#1e293b')
     
     # Remove axes and add subtle border
     ax.set_xlim(-1.2, 1.2)
