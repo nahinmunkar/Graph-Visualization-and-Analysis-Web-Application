@@ -17,6 +17,17 @@ export const useGraphStore = create((set, get) => ({
     isAutoPlaying: false,
     phase: 'idle' // 'visiting', 'exploring', 'backtracking'
   },
+  
+  // Shortest path state
+  shortestPath: {
+    start: null,
+    end: null,
+    path: [],
+    length: -1,
+    edges: [],
+    isCalculating: false,
+    error: null
+  },
 
   setEdges: (edges) => {
     const nodeSet = new Set();
@@ -118,6 +129,15 @@ export const useGraphStore = create((set, get) => ({
         isComplete: false,
         isAutoPlaying: false,
         phase: 'idle'
+      },
+      shortestPath: {
+        start: null,
+        end: null,
+        path: [],
+        length: -1,
+        edges: [],
+        isCalculating: false,
+        error: null
       }
     });
   },
@@ -143,5 +163,45 @@ export const useGraphStore = create((set, get) => ({
 
   updateTraversalState: (newState) => set({
     traversalState: { ...get().traversalState, ...newState }
+  }),
+  
+  // Shortest path methods
+  setShortestPathNodes: (start, end) => set({
+    shortestPath: {
+      ...get().shortestPath,
+      start,
+      end,
+      path: [],
+      length: -1,
+      edges: [],
+      error: null
+    }
+  }),
+  
+  setShortestPathResult: (result) => set({
+    shortestPath: {
+      ...get().shortestPath,
+      ...result,
+      isCalculating: false
+    }
+  }),
+  
+  setShortestPathCalculating: (isCalculating) => set({
+    shortestPath: {
+      ...get().shortestPath,
+      isCalculating
+    }
+  }),
+  
+  clearShortestPath: () => set({
+    shortestPath: {
+      start: null,
+      end: null,
+      path: [],
+      length: -1,
+      edges: [],
+      isCalculating: false,
+      error: null
+    }
   })
 }));

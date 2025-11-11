@@ -5,6 +5,8 @@ import { GraphInput } from './components/GraphInput';
 import { RootSelector } from './components/RootSelector';
 import { AlgorithmControls } from './components/AlgorithmControls';
 import { GraphVisualizer } from './components/GraphVisualizer';
+import { ShortestPathControls } from './components/ShortestPathControls';
+
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -26,6 +28,7 @@ function App() {
               <GraphInput />
               <RootSelector />
               <AlgorithmControls />
+              <ShortestPathControls />
             </Col>
             <Col span={16}>
               <GraphVisualizer />
