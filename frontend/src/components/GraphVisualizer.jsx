@@ -19,6 +19,7 @@ export const GraphVisualizer = () => {
     nodes: storeNodes,
     edges: storeEdges,
     traversalState,
+    shortestPath,
   } = useGraphStore();
 
   const initialNodes = useMemo(() => {
@@ -31,7 +32,7 @@ export const GraphVisualizer = () => {
         position: node.position,
         data: { label: displayLabel },
         style: {
-          background: getNodeColor(node.id, traversalState),
+          background: getNodeColor(node.id, traversalState, shortestPath),
           color: "#fff",
           border: "2px solid #222",
           borderRadius: "50%",
@@ -47,7 +48,7 @@ export const GraphVisualizer = () => {
         type: "default",
       };
     });
-  }, [storeNodes, traversalState]);
+  }, [storeNodes, traversalState, shortestPath]);
 
   const initialEdges = useMemo(() => {
     return storeEdges.map((edge) => ({
@@ -57,8 +58,8 @@ export const GraphVisualizer = () => {
       label: edge.label,
       type: 'straight',
       style: {
-        stroke: getEdgeColor(edge, traversalState),
-        strokeWidth: 2,
+        stroke: getEdgeColor(edge, traversalState, shortestPath),
+        strokeWidth: getEdgeWidth(edge, shortestPath),
         transition: "all 0.3s ease",
       },
       labelStyle: {
@@ -70,7 +71,7 @@ export const GraphVisualizer = () => {
       },
       animated: isEdgeAnimated(edge, traversalState),
     }));
-  }, [storeEdges, traversalState]);
+  }, [storeEdges, traversalState, shortestPath]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -164,7 +165,20 @@ export const GraphVisualizer = () => {
   );
 };
 
-function getNodeColor(nodeId, traversalState) {
+function getNodeColor(nodeId, traversalState, shortestPath) {
+  // Priority: shortest path start/end > shortest path nodes > traversal current > traversal visited > default
+  
+  // Shortest path start/end nodes
+  if (shortestPath && (nodeId === shortestPath.start || nodeId === shortestPath.end)) {
+    return "#ff4d4f"; // Red for start/end nodes
+  }
+  
+  // Nodes in shortest path
+  if (shortestPath && shortestPath.path && shortestPath.path.includes(nodeId)) {
+    return "#52c41a"; // Green for path nodes
+  }
+  
+  // Current node in traversal
   if (traversalState.current === nodeId) {
     return "#ff6b6b"; // Current node - red
   }
@@ -174,7 +188,19 @@ function getNodeColor(nodeId, traversalState) {
   return "#339af0"; // Unvisited node - blue
 }
 
-function getEdgeColor(edge, traversalState) {
+function getEdgeColor(edge, traversalState, shortestPath) {
+  // Check if edge is in shortest path
+  if (shortestPath && shortestPath.edges && shortestPath.edges.length > 0) {
+    const isInPath = shortestPath.edges.some(
+      ([from, to]) =>
+        (edge.source === from && edge.target === to) ||
+        (edge.source === to && edge.target === from)
+    );
+    if (isInPath) {
+      return "#52c41a"; // Green for shortest path edges
+    }
+  }
+  
   // Current edge being traversed
   if (traversalState.currentEdge && traversalState.currentEdge === edge.id) {
     return "#ff6b6b"; // Current edge - red
@@ -192,6 +218,21 @@ function getEdgeColor(edge, traversalState) {
   }
   
   return "#b1b1b7"; // Default edge - gray
+}
+
+function getEdgeWidth(edge, shortestPath) {
+  // Thicker edges for shortest path
+  if (shortestPath && shortestPath.edges && shortestPath.edges.length > 0) {
+    const isInPath = shortestPath.edges.some(
+      ([from, to]) =>
+        (edge.source === from && edge.target === to) ||
+        (edge.source === to && edge.target === from)
+    );
+    if (isInPath) {
+      return 4; // Thicker for shortest path
+    }
+  }
+  return 2; // Default width
 }
 
 function isEdgeAnimated(edge, traversalState) {
