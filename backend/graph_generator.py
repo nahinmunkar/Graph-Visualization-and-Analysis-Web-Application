@@ -156,6 +156,63 @@ def classify_graph_endpoint():
             'error': str(e)
         })
 
+@app.route('/shortest_path', methods=['POST'])
+def shortest_path():
+    """Calculate shortest path between two nodes"""
+    try:
+        data = request.json
+        edges = data.get('edges', [])
+        start_node = data.get('start')
+        end_node = data.get('end')
+        
+        if not edges or not start_node or not end_node:
+            return jsonify({'error': 'Missing edges, start node, or end node'}), 400
+        
+        # Create graph
+        G = nx.Graph()
+        for edge in edges:
+            if len(edge) >= 2:
+                source = str(edge[0])
+                target = str(edge[1])
+                G.add_edge(source, target)
+        
+        # Check if nodes exist
+        start_str = str(start_node)
+        end_str = str(end_node)
+        
+        if start_str not in G.nodes() or end_str not in G.nodes():
+            return jsonify({'error': 'Start or end node not found in graph'}), 400
+        
+        # Calculate shortest path
+        try:
+            path = nx.shortest_path(G, source=start_str, target=end_str)
+            length = nx.shortest_path_length(G, source=start_str, target=end_str)
+            
+            # Get path edges
+            path_edges = []
+            for i in range(len(path) - 1):
+                path_edges.append([path[i], path[i + 1]])
+            
+            return jsonify({
+                'path': path,
+                'length': length,
+                'edges': path_edges,
+                'exists': True
+            })
+        except nx.NetworkXNoPath:
+            return jsonify({
+                'path': [],
+                'length': -1,
+                'edges': [],
+                'exists': False,
+                'error': f'No path exists between {start_node} and {end_node}'
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy'})
